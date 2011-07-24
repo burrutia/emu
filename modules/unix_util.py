@@ -36,5 +36,9 @@ class shell_utils(object):
         mymatch = object.split()
 	print mymatch[ph]
 
-
-
+    def host(self, object, ip):
+        import socket
+        self.ip = ip
+        hostaddress = socket.gethostbyaddr(ip)
+        hostname = hostaddress[0]
+        return hostname
