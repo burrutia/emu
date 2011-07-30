@@ -26,19 +26,32 @@ class shell_utils(object):
         self.object = object
 
     def grep(self, object, smatch):
-	self.smatch = smatch
-	if smatch in object:
-	    return object
+        self.smatch = smatch
+        if smatch in object:
+            return object
 
-    def awk(self, ph, smatch, object):
-        self.ph = ph
-	self.grep(smatch, object)
-        mymatch = object.split()
-	print mymatch[ph]
+    def awk(self, pos, object, smatch=''):
+        self.pos = pos
+        check_smatch = False
+        if len(smatch) > 0:
+            check_smatch = True
+            self.grep(smatch, object)
+            pmatch = object.split()
+            return pmatch[pos]
+        if len(smatch) == 0:
+            pmatch = object.split()
+            return pmatch[pos]
 
     def host(self, object, ip):
         import socket
         self.ip = ip
         hostaddress = socket.gethostbyaddr(ip)
         hostname = hostaddress[0]
-        return hostname
+        object = hostname
+        return object
+
+    def cut(self, object, delimeter, position):
+        self.delimeter = delimeter
+        self.position = position
+        object = object.split(delimeter, position)
+        return object[0]
