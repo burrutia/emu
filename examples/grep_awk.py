@@ -2,7 +2,7 @@
 # example usage for unix_util module
 
 import os, sys, string, re
-sys.path.append("/home/control/modules")
+sys.path.append("/home/emu/modules")
 from unix_util import shell_utils
 from ec2_cluster import conn
 
