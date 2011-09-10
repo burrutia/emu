@@ -1,3 +1,4 @@
 fix master gets called via rc.local
 use templates to generae base named confs
 install bind
+create /var/named/zones/master

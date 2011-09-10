@@ -47,41 +47,75 @@
 import os, sys, io, subprocess
 import ConfigParser
 import fileinput
+
 from shutil import *
 
-if os.path.isfile('/etc/named.conf'):
-    print "Please don't run this on an existing installation!"
-    print "please remove /etc/named.conf & start again"
-    sys.exit(2)
+#if os.path.isfile('/etc/named.conf'):
+#    print "Please don't run this on an existing installation!"
+#    print "please remove /etc/named.conf & start again"
+#    sys.exit(2)
 
-zonefile = 'named/zones/master/main.internal.zone.db.tpl'
 config_file ='/etc/datacenter.ini'
 config = ConfigParser.ConfigParser()
 config.readfp(open(config_file))
+
+ip = subprocess.Popen( "/usr/bin/facter ipaddress", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+ipaddr = ip.strip("\n")
 
 setupdir = config.get('master-conf','setup')
 bizunit = config.get('master-conf','unit')
 env = config.get('master-conf','env')
 domain = bizunit + env
 
-def make_conf(template_in='',template_out=''):
-    copy(template_in,template_out)
-    f = io.open(template_out, "w")
-    for line in io.open(template_in, "r"):
+os.chdir('%s/named' %(setupdir))
+
+zonefile_in = 'zones/master/main.internal.zone.db.tpl'
+zonefile_out = ('zones/master/%s.internal.zone.db' %(domain))
+zonefile_prd = ('/var/named/zones/master/%s.internal.zone.db' %(domain))
+
+def make_conf( template_in, template_out, ipaddr=''):
+    copy( template_in,template_out )
+    f = io.open( template_out, "w" )
+    for line in io.open( template_in, "r" ):
         if '$domain' in line:
             line = line.replace('$domain', domain)
+            f.write(line)
+        if '$ipaddr' in line:
+            line = line.replace('$ipaddr', ipaddr)
             f.write(line)
         if not domain in line:
             f.write(line)
     f.close()
 
+try:
+    make_conf(template_in='named.conf.tpl', template_out='named.conf' )
+except Exception, err:
+    print err
 
-ip = subprocess.Popen( "/usr/bin/facter ipaddress", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
-ipaddr = ip.strip("\n")
-
-make_conf(template_in='named.conf.tpl', template_out='named.conf')
 copy('named.conf', '/etc/named.conf')
 
-# Change to whereever U want to store everything.
-###
-#/bin/cp -var ${TOPDIR}/setup/named/named.conf /etc/named.conf
+try:
+    make_conf(template_in=zonefile_in, template_out=zonefile_out, ipaddr=ipaddr )
+except Exception,err:
+    print err
+    
+copy(zonefile_out, zonefile_prd)
+
+copy('named.root.hints', '/etc/named.root.hints')
+copy('named.rfc1912.zones', '/etc/named.rfc1912.zones')
+copy('named.root', '/etc/named.root')
+copy('zones/master/localdomain.zone', '/var/named/zones/master/localdomain.zone')
+copy('zones/master/localhost.zone', '/var/named/zones/master/localhost.zone')
+copy('zones/master/named.local', '/var/named/zones/master/named.local')
+copy('zones/master/named.broadcast', '/var/named/zones/master/named.broadcast')
+copy('zones/master/named.zero', '/var/named/zones/master/named.zero')
+
+if not os.path.isdir('/var/named/etc/namedb/client_zones'):
+    os.mkdir('/var/named/etc', 0775)
+    os.mkdir('/var/named/etc/namedb', 0775)
+    os.mkdir('/var/named/etc/namedb/client_zones', 0775)
+
+if not os.path.isfile('/var/named/etc/namedb/client_zones/zones.include'):
+    f = open('/var/named/etc/namedb/client_zones/zones.include', 'w')
+    f.write('')
+    f.close()

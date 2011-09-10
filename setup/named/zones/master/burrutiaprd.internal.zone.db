@@ -4,7 +4,7 @@
 
 $TTL    86400
 
-@               IN SOA  ns1.$domain.internal      root.localhost. (
+@               IN SOA  ns1.burrutiaprd.internal      root.localhost. (
 
                                         2011051902              ; serial (d. adams)
 
@@ -16,6 +16,7 @@ $TTL    86400
 
                                         86400 )         ; minimum
 
-@               IN      NS              ns1.$domain.internal
-@               IN      NS              ns2.$domain.internal
-ns1		IN	A	$ipaddr
+@               IN      NS              ns1.burrutiaprd.internal
+@               IN      NS              ns2.burrutiaprd.internal
+ns1		IN	A	10.170.131.181
+ns1		IN	A	10.170.131.181
