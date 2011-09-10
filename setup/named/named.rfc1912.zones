@@ -1,0 +1,35 @@
+// named.rfc1912.zones:
+//
+// ISC BIND named zone configuration for zones recommended by
+// RFC 1912 section 4.1 : localhost TLDs and address zones
+//
+zone "localdomain" IN {
+        type master;
+        file "zones/master/localdomain.zone";
+        allow-update { none; };
+};
+
+zone "localhost" IN {
+        type master;
+        file "zones/master/localhost.zone";
+        allow-update { none; };
+};
+
+zone "0.0.127.in-addr.arpa" IN {
+        type master;
+        file "zones/master/named.local";
+        allow-update { none; };
+};
+
+
+zone "255.in-addr.arpa" IN {
+        type master;
+        file "zones/master/named.broadcast";
+        allow-update { none; };
+};
+
+zone "0.in-addr.arpa" IN {
+        type master;
+        file "zones/master/named.zero";
+        allow-update { none; };
+};
