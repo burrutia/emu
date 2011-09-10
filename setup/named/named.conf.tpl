@@ -18,7 +18,7 @@ options
         include "/etc/named.rfc1912.zones";
         include "/var/named/etc/namedb/client_zones/zones.include";
 
-        zone "${BIZUNIT}${ENV}.internal" {
+        zone "$domain.internal" {
                 type master;
-                file "zones/master/${BIZUNIT}${ENV}.internal.zone.db";
+                file "zones/master/$domain.internal.zone.db";
         };
