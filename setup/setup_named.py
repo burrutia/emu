@@ -54,10 +54,12 @@ if os.path.isfile('/etc/named.conf'):
     print "please remove /etc/named.conf & start again"
     sys.exit(2)
 
+zonefile = 'named/zones/master/main.internal.zone.db.tpl'
 config_file ='/etc/datacenter.ini'
 config = ConfigParser.ConfigParser()
 config.readfp(open(config_file))
 
+setupdir = config.get('master-conf','setup')
 bizunit = config.get('master-conf','unit')
 env = config.get('master-conf','env')
 domain = bizunit + env
@@ -73,8 +75,13 @@ def make_conf(template_in='',template_out=''):
             f.write(line)
     f.close()
 
-make_conf(template_in='named.conf.tpl',template_out='named.conf')
-copy('named.conf','/etc/named.conf')
+
+ip = subprocess.Popen( "/usr/bin/facter ipaddress", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+ipaddr = ip.strip("\n")
+
+make_conf(template_in='named.conf.tpl', template_out='named.conf')
+copy('named.conf', '/etc/named.conf')
+
 # Change to whereever U want to store everything.
 ###
 #/bin/cp -var ${TOPDIR}/setup/named/named.conf /etc/named.conf
