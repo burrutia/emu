@@ -50,10 +50,10 @@ import fileinput
 
 from shutil import *
 
-#if os.path.isfile('/etc/named.conf'):
-#    print "Please don't run this on an existing installation!"
-#    print "please remove /etc/named.conf & start again"
-#    sys.exit(2)
+if os.path.isfile('/etc/named.conf'):
+    print "Please don't run this on an existing installation!"
+    print "please remove /etc/named.conf & start again"
+    sys.exit(2)
 
 config_file ='/etc/datacenter.ini'
 config = ConfigParser.ConfigParser()
@@ -69,10 +69,35 @@ domain = bizunit + env
 
 os.chdir('%s/named' %(setupdir))
 
+
+copy('named.root.hints', '/etc/named.root.hints')
+copy('named.rfc1912.zones', '/etc/named.rfc1912.zones')
+copy('named.root', '/etc/named.root')
+copy('zones/master/localdomain.zone', '/var/named/zones/master/localdomain.zone')
+copy('zones/master/localhost.zone', '/var/named/zones/master/localhost.zone')
+copy('zones/master/named.local', '/var/named/zones/master/named.local')
+copy('zones/master/named.broadcast', '/var/named/zones/master/named.broadcast')
+copy('zones/master/named.zero', '/var/named/zones/master/named.zero')
+
+if not os.path.isdir('/var/named/etc/namedb/client_zones'):
+    os.mkdir('/var/named/etc', 0775)
+    os.mkdir('/var/named/etc/namedb', 0775)
+    os.mkdir('/var/named/etc/namedb/client_zones', 0775)
+
+if not os.path.isdir('/var/named/zones/templates'):
+    os.mkdir('/var/named/zones/templates', 0775)
+
+if not os.path.isfile('/var/named/etc/namedb/client_zones/zones.include'):
+    f = open('/var/named/etc/namedb/client_zones/zones.include', 'w')
+    f.write('')
+    f.close()
+
 zonefile_in = 'zones/master/main.internal.zone.db.tpl'
 zonefile_out = ('zones/master/%s.internal.zone.db' %(domain))
 zonefile_prd = ('/var/named/zones/master/%s.internal.zone.db' %(domain))
 
+rev_zone_in = 'zones/templates/rev.in-addr.tpl'
+rev_zone_out = '/var/named/zones/templates/rev.in-addr.tpl'
 def make_conf( template_in, template_out, ipaddr=''):
     copy( template_in,template_out )
     f = io.open( template_out, "w" )
@@ -101,21 +126,10 @@ except Exception,err:
     
 copy(zonefile_out, zonefile_prd)
 
-copy('named.root.hints', '/etc/named.root.hints')
-copy('named.rfc1912.zones', '/etc/named.rfc1912.zones')
-copy('named.root', '/etc/named.root')
-copy('zones/master/localdomain.zone', '/var/named/zones/master/localdomain.zone')
-copy('zones/master/localhost.zone', '/var/named/zones/master/localhost.zone')
-copy('zones/master/named.local', '/var/named/zones/master/named.local')
-copy('zones/master/named.broadcast', '/var/named/zones/master/named.broadcast')
-copy('zones/master/named.zero', '/var/named/zones/master/named.zero')
+try:
+    make_conf(template_in=rev_zone_in, template_out=rev_zone_out )
+except Exception,err:
+    print err
 
-if not os.path.isdir('/var/named/etc/namedb/client_zones'):
-    os.mkdir('/var/named/etc', 0775)
-    os.mkdir('/var/named/etc/namedb', 0775)
-    os.mkdir('/var/named/etc/namedb/client_zones', 0775)
 
-if not os.path.isfile('/var/named/etc/namedb/client_zones/zones.include'):
-    f = open('/var/named/etc/namedb/client_zones/zones.include', 'w')
-    f.write('')
-    f.close()
+
