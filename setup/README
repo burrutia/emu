@@ -1,4 +1,29 @@
-fix master gets called via rc.local
-use templates to generae base named confs
-install bind
-create /var/named/zones/master
+Deps for Install:
+---------------------------------------
+Facter - you'll need this for Puppet anyways
+Python2.6 -  for python IO
+Bind - The Standard in DNS
+
+Working Yum repos - i.e. EPEL repo & CentOS repo files
+
+
+Installation Instructions
+---------------------------------------
+1) install bind
+2) create /var/named/zones/master
+3) reset_master.py gets called via rc.local
+    U can run this manually the 1st time but each time
+    u reboot it needs to run again to setup resolv.conf for other
+    nodes and it self since it will put this into a S3 bucket so
+    nodes can cron pull it. Ideally u shd have 2 small nodes to handle
+    dns for fault tolerance.
+
+4) run setup_named.py
+
+--more to come soon including aws scripts.
+  reorganizing the repo soon as well most
+  of it will go into classes
+
+
+
+
