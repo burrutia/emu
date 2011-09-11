@@ -72,18 +72,23 @@ class EC2_Dns(object):
         self.previous_zone =  previous_zone
         return previous_zone
 
-    # check to see if we are in named.conf already for the zone
     def prepare_conf(self, domain ):
         bind_conf = '/etc/named.conf'
         named_conf_tpl = ('%s/scripts/dns/workspace/named.conf' %(basedir))
         forward_zone = ('/var/named/zones/master/%s.internal.zone.db' %(domain))
         forward_zone_tpl = ('%s/scripts/dns/workspace/%s.internal.zone.db' %(basedir, domain))
+        copy(forward_zone, forward_zone_tpl)
+        self.named_conf_tpl = named_conf_tpl
+        self.bind_conf = bind_conf
+        self.named_conf_tpl = named_conf_tpl
+        self.forward_zone = forward_zone
+        self.forward_zone_tpl = forward_zone_tpl
         fzf = forward_zone
         fzn = forward_zone_tpl
         self.fzf = fzf
         self.fzn = fzn
 
-    def clean_zone(self, zone_file, zone_file_new, domain):
+    def clean_zone(self, zone_file, zone_file_new, domain, thostname):
         self.prepare_conf( domain )
         f = open(zone_file, "r")
         g = open(zone_file_new, "w")
@@ -94,9 +99,9 @@ class EC2_Dns(object):
                 print >> g, '%s' %(line)
         f.close()
         g.close()
-        copy(fzn,fzf)
+        copy(self.fzn,self.fzf)
 
-    def get_all_zfname(self):
+    def get_all_zfname(self, domain, thostname):
         zfname = 'in-addr.arpa'
         dirList=os.listdir('/var/named/zones/master')
         for rzf in dirList:
@@ -105,38 +110,34 @@ class EC2_Dns(object):
                 rzn = ("%s.NEW.txt" %(rzf))
                 rzffile = ("/var/named/zones/master/%s" %(rzf))
                 rznfile = ("%s/scripts/dns/workspace/%s" %( basedir, rzn ))
-                self.clean_zone(rzffile,rznfile)
+                self.clean_zone( rzffile, rznfile, domain, thostname )
                 copy(rznfile,rzffile)
 		print rzffile
 		print rznfile
            
 
-    def write_zf(self, named_conf_zname, zone_name, bind_conf, named_conf_tpl):
-        copy(bind_conf, named_conf_tpl)
-
-        fileHandle = open ( bind_conf, 'r' )
-        
+    def write_zone_entry(self, zone_name ):
+        copy(self.bind_conf, self.named_conf_tpl)
+        fileHandle = open ( self.bind_conf, 'r' )
 	text = fileHandle.read()
-        
-	bind_conf_tpl = ('dns/workspace/%s.zone' %(zone_name))
-        zone_file = text.find(named_conf_zname)
+	bind_conf_tpl = ('%s/scripts/dns/workspace/%s.zone' %(basedir,zone_name))
+        zone_file = text.find(zone_name)
 
         if zone_file > -1:
             print zone_name, "****Found at Index****", zone_file
         elif zone_file == -1:
-            print "entry not in named.conf appending to %s" %(named_conf_tpl)
-            new_zone_file = open(named_conf_tpl, 'a')
+            print "entry not in named.conf appending to %s" %(self.named_conf_tpl)
+            new_zone_file = open(self.named_conf_tpl, 'a')
             print >> new_zone_file, '        zone "%s" {' %(zone_name)
             print >> new_zone_file, '            type master;'
             print >> new_zone_file, '            file "zones/master/%s";' %(zone_name)
             print >> new_zone_file, '        };'
             new_zone_file.close()
         fileHandle.close()
-	return zone_file
 
     # this may be creating double spaces
-    def set_fserialdate(self, template_used, template_out):
-        fileHandle = open ( template_used, "r" )
+    def set_fserialdate(self, template_out='' ):
+        fileHandle = open ( template_out, "r" )
         regex = re.compile(r'\d{10}')
        
         for line in fileHandle:
@@ -157,7 +158,7 @@ class EC2_Dns(object):
                 line = line.replace(zmatch, sndate)
             sys.stdout.write(line)
 
-    def write_ptr_record(self, previous_zone, a, ipaddr, zone_name, template_out, thostname, domain, forward_zone_tpl):
+    def write_ptr_record(self, previous_zone, a, ipaddr, zone_name, template_out, thostname, domain):
         if os.path.isfile(previous_zone):
             template_in = ("/var/named/zones/master/%s" %(zone_name))
         if not os.path.exists(previous_zone):
@@ -167,7 +168,9 @@ class EC2_Dns(object):
         fileHandle = open ( template_out, 'a' )
         fileHandle.write ( '%s\t\tIN\tPTR\t%s.%s.internal.\n' %(a, thostname, domain) )
         fileHandle.close()
-	self.set_fserialdate(template_used, template_out)
+	self.set_fserialdate(template_out)
+        # copy file back out
+        copy(template_out, '/var/named/zones/master/')
 
 
     def write_a_record(self, previous_zone, a, ipaddr, zone_name, template_out, thostname, cluster, forward_zone_tpl):
