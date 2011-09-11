@@ -37,6 +37,10 @@ class EC2_Dns(object):
         self.object = object
 
     def backup_zone(self, object):
+        """ 
+        This will be a method to backup all dns data
+        before each edit
+        """
         self.bkup_date = bkup_date
 
     def rev_ip(self, ipaddr):
@@ -99,7 +103,7 @@ class EC2_Dns(object):
                 print >> g, '%s' %(line)
         f.close()
         g.close()
-        copy(self.fzn,self.fzf)
+        copy(self.fzn, self.fzf)
 
     def get_all_zfname(self, domain, thostname):
         zfname = 'in-addr.arpa'
@@ -133,12 +137,9 @@ class EC2_Dns(object):
             print >> new_zone_file, '        };'
             new_zone_file.close()
         fileHandle.close()
-        # TTD write sep call to backup conf as entire zone entry
         copy(self.named_conf_tpl, self.bind_conf)
 
     def clean_files(self):
-        #from commands import getoutput
-        #getoutput("%s/shell/clean_named.sh" %(basedir))
         subprocess.Popen( "%s/shell/clean_named.sh" %(basedir), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
 
     # this may be creating double spaces
@@ -175,17 +176,18 @@ class EC2_Dns(object):
         fileHandle.write ( '%s\t\tIN\tPTR\t%s.%s.internal.\n' %(a, thostname, domain) )
         fileHandle.close()
 	self.set_fserialdate(template_out)
-        # copy file back out
         copy(template_out, '/var/named/zones/master/')
 
 
-    def write_a_record(self, previous_zone, a, ipaddr, zone_name, template_out, thostname, cluster, forward_zone_tpl):
-        copy(forward_zone,forward_zone_tpl)
-        fileHandle = open ( forward_zone_tpl, 'a')
+    def write_a_record(self, previous_zone, a, ipaddr, zone_name, template_out, thostname, ):
+        copy(self.forward_zone, self.forward_zone_tpl)
+        fileHandle = open ( self.forward_zone_tpl, 'a')
+        print "opening %s" %(self.forward_zone_tpl)
+        print "%s\t\tIN\tA\t%s\n" %(thostname,ipaddr)
         fileHandle.write ( '%s\t\tIN\tA\t%s\n' %(thostname,ipaddr))
         fileHandle.close()
         target_zone = ("/var/named/zones/master/%s" %(zone_name))
-	return target_zone
+        copy(self.forward_zone_tpl,self.forward_zone)
 
     def sync_named(self):
         subprocess.call(['/usr/bin/sudo','/scripts/sync_named.sh'],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
