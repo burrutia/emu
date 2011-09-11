@@ -114,7 +114,6 @@ class EC2_Dns(object):
                 copy(rznfile,rzffile)
 		print rzffile
 		print rznfile
-           
 
     def write_zone_entry(self, zone_name ):
         copy(self.bind_conf, self.named_conf_tpl)
@@ -134,6 +133,13 @@ class EC2_Dns(object):
             print >> new_zone_file, '        };'
             new_zone_file.close()
         fileHandle.close()
+        # TTD write sep call to backup conf as entire zone entry
+        copy(self.named_conf_tpl, self.bind_conf)
+
+    def clean_files(self):
+        #from commands import getoutput
+        #getoutput("%s/shell/clean_named.sh" %(basedir))
+        subprocess.Popen( "%s/shell/clean_named.sh" %(basedir), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
 
     # this may be creating double spaces
     def set_fserialdate(self, template_out='' ):
