@@ -73,29 +73,18 @@ class EC2_Dns(object):
         return previous_zone
 
     # check to see if we are in named.conf already for the zone
-    def prepare_conf(self, cluster, ipaddr):
-        self.rev_ip(ipaddr)
+    def prepare_conf(self, domain ):
         bind_conf = '/etc/named.conf'
-        named_conf_tpl = '%s/scripts/dns/workspace/named.conf' %(basedir)
+        named_conf_tpl = ('%s/scripts/dns/workspace/named.conf' %(basedir))
         forward_zone = ('/var/named/zones/master/%s.internal.zone.db' %(domain))
         forward_zone_tpl = ('%s/scripts/dns/workspace/%s.internal.zone.db' %(basedir, domain))
-
         fzf = forward_zone
         fzn = forward_zone_tpl
-        # call chown to chown everything in zone dir so we dont have any issues
-	try:
-            subprocess.call(['/usr/bin/sudo','/scripts/named_perms.sh'],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	    return bind_conf
-	    return forward_zone
-	    return forward_zone_tpl
-	    return named_conf_tpl
-	    return fzf
-	    return fzn
-	except:
-	    print "Unknown Exception"
-	    sys.exit(2)
+        self.fzf = fzf
+        self.fzn = fzn
 
-    def clean_zone(self, zone_file, zone_file_new, fzn, fzf):
+    def clean_zone(self, zone_file, zone_file_new, domain):
+        self.prepare_conf( domain )
         f = open(zone_file, "r")
         g = open(zone_file_new, "w")
         for line in f:
@@ -111,16 +100,16 @@ class EC2_Dns(object):
         zfname = 'in-addr.arpa'
         dirList=os.listdir('/var/named/zones/master')
         for rzf in dirList:
+            print rzf
             if zfname in rzf:
                 rzn = ("%s.NEW.txt" %(rzf))
                 rzffile = ("/var/named/zones/master/%s" %(rzf))
                 rznfile = ("%s/scripts/dns/workspace/%s" %( basedir, rzn ))
-		# pull in clean opts from above func
                 self.clean_zone(rzffile,rznfile)
-		# pull in clean opts
                 copy(rznfile,rzffile)
-		return rzffile
-		return rznfile
+		print rzffile
+		print rznfile
+           
 
     def write_zf(self, named_conf_zname, zone_name, bind_conf, named_conf_tpl):
         copy(bind_conf, named_conf_tpl)
