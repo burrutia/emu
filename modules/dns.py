@@ -125,17 +125,17 @@ class EC2_Dns(object):
         copy(self.bind_conf, self.named_conf_tpl)
         fileHandle = open ( self.bind_conf, 'r' )
 	text = fileHandle.read()
-	bind_conf_tpl = ('%s/scripts/dns/workspace/%s.zone' %(basedir,zone_name))
-        zone_file = text.find(zone_name)
+	bind_conf_tpl = ('%s/scripts/dns/workspace/%s.zone' %( basedir, self.zone_name ))
+        zone_file = text.find( self.zone_name )
 
         if zone_file > -1:
-            print zone_name, "****Found at Index****", zone_file
+            print self.zone_name, "****Found at Index****", zone_file
         elif zone_file == -1:
             print "entry not in named.conf appending to %s" %(self.named_conf_tpl)
             new_zone_file = open(self.named_conf_tpl, 'a')
-            print >> new_zone_file, '        zone "%s" {' %(zone_name)
+            print >> new_zone_file, '        zone "%s" {' %(self.zone_name)
             print >> new_zone_file, '            type master;'
-            print >> new_zone_file, '            file "zones/master/%s";' %(zone_name)
+            print >> new_zone_file, '            file "zones/master/%s";' %(self.zone_name)
             print >> new_zone_file, '        };'
             new_zone_file.close()
         fileHandle.close()
@@ -188,7 +188,7 @@ class EC2_Dns(object):
         print "%s\t\tIN\tA\t%s\n" %(thostname,ipaddr)
         fileHandle.write ( '%s\t\tIN\tA\t%s\n' %(thostname,ipaddr))
         fileHandle.close()
-        target_zone = ("/var/named/zones/master/%s" %(zone_name))
+        target_zone = ("/var/named/zones/master/%s" %(self.zone_name))
         copy(self.forward_zone_tpl,self.forward_zone)
 
     def sync_named(self):
