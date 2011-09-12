@@ -2,6 +2,7 @@ Deps for Install:
 ---------------------------------------
 Facter - you'll need this for Puppet anyways
 Python2.6 -  for python IO
+IPy - for spliting  the ips into segments
 Bind - The Standard in DNS
 
 Working Yum repos - i.e. EPEL repo & CentOS repo files
