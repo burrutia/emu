@@ -132,4 +132,4 @@ except Exception,err:
     print err
 
 
-
+#cp /var/named/zones/templates/rev.in-addr.tpl /home/emu/scripts/dns/workspace/rev.in-addr.arpa.tpl

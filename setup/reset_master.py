@@ -25,6 +25,8 @@ config_file = '/etc/datacenter.ini'
 config = ConfigParser.ConfigParser()
 config.readfp(open(config_file))
 
+basedir = config.get('master-conf', 'basedir')
+
 n = config.get('master-conf', 'host')
 u = config.get('master-conf', 'unit')
 e = config.get('master-conf', 'env')
@@ -57,14 +59,15 @@ master_zone = ("/var/named/zones/master/%s%s.internal.zone.db" %(u,e))
 clean_zone = ("/bin/sed -i -e '/^ns1/d' %s" %(master_zone))
 subprocess.Popen( clean_zone, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
 
+# need to pull out the existing a record for ns1 as do others
 fileHandle = open ( master_zone, 'a')
 fileHandle.write ( 'ns1\t\tIN\tA\t%s\n' %(ipaddr))
 fileHandle.close()
 
-#command = ("/scripts/set_master_dnsname.py -i %s -H %s" %(ipaddr, hostname))
-#subprocess.Popen( command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
-named_restart = subprocess.Popen( "/bin/hostname %s" %(hostname), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
-named_restart = subprocess.Popen( "/bin/domainname %s" %(domain), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
-named_restart = subprocess.Popen( "/etc/init.d/syslog restart", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+command = ("%s/scripts/set_master_dnsname.py -i %s -H %s" %( basedir, ipaddr, hostname ))
+subprocess.Popen( command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+subprocess.Popen( "/bin/hostname %s" %(hostname), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+subprocess.Popen( "/bin/domainname %s" %(domain), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+subprocess.Popen( "/etc/init.d/syslog restart", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
 named_restart = subprocess.Popen( "/etc/init.d/named restart", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
 print named_restart
