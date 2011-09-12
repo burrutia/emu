@@ -74,13 +74,25 @@ ipaddr = options.ipaddr
 thostname = options.thostname
 
 dns = EC2_Dns()
-# will change soon as one call
-drev = dns.rev_ip(ipaddr)
-da = dns.a_seg(ipaddr)
-dpre = dns.p_zone()
-dtout = dns.t_out()
-g = dns.get_all_zfname(domain, thostname)
-dns.write_ptr_record(dpre, da, ipaddr, drev, dtout, thostname, domain )
-dns.write_zone_entry(drev )
-dns.write_a_record(dpre, da, ipaddr, drev, dtout, thostname)
-dns.clean_files()
+
+try:
+    dns.write_ptr_record(ipaddr, thostname, domain )
+except Exception, err:
+    print err
+
+try:
+    dns.write_zone_entry()
+except Exception, err:
+    print err
+
+try:
+    dns.write_a_record(ipaddr, thostname)
+except Exception, err:
+    print err
+
+
+try:
+    dns.clean_files()
+except Exception, err:
+    print err
+
