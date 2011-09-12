@@ -55,7 +55,6 @@ class EC2_Dns(object):
             d = m[3]
             zone_name = ("%s.%s.%s.in-addr.arpa" %(b,c,d))
             self.zone_name = zone_name
-            return (zone_name)
 
     def a_seg(self, ipaddr ):
         ip = IP(ipaddr)
@@ -64,17 +63,14 @@ class EC2_Dns(object):
             m = item.split(".")
             a = m[0]
             self.a = a
-            return a
 
     def t_out(self):
         template_out = ("%s/scripts/dns/workspace/%s" %(basedir, self.zone_name))
         self.template_out = template_out
-        return template_out
 
     def p_zone(self):
         previous_zone = ("/var/named/zones/master/%s" %(self.zone_name))
         self.previous_zone =  previous_zone
-        return previous_zone
 
     def prepare_conf(self, domain ):
         bind_conf = '/etc/named.conf'
@@ -105,7 +101,15 @@ class EC2_Dns(object):
         g.close()
         copy(self.fzn, self.fzf)
 
-    def get_all_zfname(self, domain, thostname):
+    def get_all_zfname(self, domain, thostname, ipaddr):
+        self.rev_ip(ipaddr)
+        print self.zone_name
+        self.a_seg(ipaddr)
+        print self.a
+        self.p_zone()
+        print self.previous_zone
+        self.t_out()
+        ## end changes
         zfname = 'in-addr.arpa'
         dirList=os.listdir('/var/named/zones/master')
         for rzf in dirList:
@@ -116,10 +120,8 @@ class EC2_Dns(object):
                 rznfile = ("%s/scripts/dns/workspace/%s" %( basedir, rzn ))
                 self.clean_zone( rzffile, rznfile, domain, thostname )
                 copy(rznfile,rzffile)
-		print rzffile
-		print rznfile
 
-    def write_zone_entry(self, zone_name ):
+    def write_zone_entry(self):
         copy(self.bind_conf, self.named_conf_tpl)
         fileHandle = open ( self.bind_conf, 'r' )
 	text = fileHandle.read()
@@ -142,9 +144,8 @@ class EC2_Dns(object):
     def clean_files(self):
         subprocess.Popen( "%s/shell/clean_named.sh" %(basedir), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
 
-    # this may be creating double spaces
-    def set_fserialdate(self, template_out='' ):
-        fileHandle = open ( template_out, "r" )
+    def set_fserialdate(self ):
+        fileHandle = open ( self.template_out, "r" )
         regex = re.compile(r'\d{10}')
        
         for line in fileHandle:
@@ -156,30 +157,31 @@ class EC2_Dns(object):
        
         fileHandle.close()
         
-        print "Updated %s" %(template_out)
+        print "Updated %s" %(self.template_out)
         
         sndate = str(ndate)
         print "serial date is %s" %(sndate)
-        for line in fileinput.input(template_out, inplace=1):
+        for line in fileinput.input(self.template_out, inplace=1):
             if zmatch in line:
                 line = line.replace(zmatch, sndate)
             sys.stdout.write(line)
 
-    def write_ptr_record(self, previous_zone, a, ipaddr, zone_name, template_out, thostname, domain):
-        if os.path.isfile(previous_zone):
-            template_in = ("/var/named/zones/master/%s" %(zone_name))
-        if not os.path.exists(previous_zone):
+    def write_ptr_record(self, ipaddr, thostname, domain):
+        self.get_all_zfname(domain, thostname, ipaddr)
+        if os.path.isfile(self.previous_zone):
+            template_in = ("/var/named/zones/master/%s" %(self.zone_name))
+        if not os.path.exists(self.previous_zone):
             template_in = '%s/scripts/dns/workspace/rev.in-addr.arpa.tpl' %(basedir)
 
-        copy(template_in,template_out)
-        fileHandle = open ( template_out, 'a' )
-        fileHandle.write ( '%s\t\tIN\tPTR\t%s.%s.internal.\n' %(a, thostname, domain) )
+        copy(template_in,self.template_out)
+        fileHandle = open ( self.template_out, 'a' )
+        fileHandle.write ( '%s\t\tIN\tPTR\t%s.%s.internal.\n' %(self.a, thostname, domain) )
         fileHandle.close()
-	self.set_fserialdate(template_out)
-        copy(template_out, '/var/named/zones/master/')
+	self.set_fserialdate()
+        copy(self.template_out, '/var/named/zones/master/')
 
 
-    def write_a_record(self, previous_zone, a, ipaddr, zone_name, template_out, thostname, ):
+    def write_a_record(self, ipaddr, thostname ):
         copy(self.forward_zone, self.forward_zone_tpl)
         fileHandle = open ( self.forward_zone_tpl, 'a')
         print "opening %s" %(self.forward_zone_tpl)
