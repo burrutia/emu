@@ -35,6 +35,8 @@ basedir = config.get('master-conf','basedir')
 class EC2_Dns(object):
     def __init__(self):
         self.object = object
+        #bind_conf = '/etc/named.conf'
+        #self.bind_conf = bind_conf
 
     def backup_zone(self, object):
         """ 
@@ -83,10 +85,8 @@ class EC2_Dns(object):
         self.named_conf_tpl = named_conf_tpl
         self.forward_zone = forward_zone
         self.forward_zone_tpl = forward_zone_tpl
-        fzf = forward_zone
-        fzn = forward_zone_tpl
-        self.fzf = fzf
-        self.fzn = fzn
+        self.fzf = forward_zone
+        self.fzn = forward_zone_tpl
 
     def clean_zone(self, zone_file, zone_file_new, domain, thostname):
         self.prepare_conf( domain )

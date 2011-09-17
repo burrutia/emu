@@ -19,6 +19,13 @@
 # WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 import os, re, string, ConfigParser, sys, boto.ec2
+from shutil import *
+import time
+import optparse
+import fileinput
+import IPy
+from IPy import IP
+import subprocess
 
 config_file ='/etc/datacenter.ini'
 
@@ -28,35 +35,22 @@ basedir = config.get('master-conf','basedir')
 mdir = ('%s/modules' %(basedir))
 sys.path.append(mdir)
 
-from shutil import *
-import time
-import optparse
-import fileinput
-import IPy
-from IPy import IP
-import subprocess
 
 cluster_file = '/etc/cluster.ini'
 cluster_config = ConfigParser.ConfigParser()
 cluster_config.readfp(open(cluster_file))
-
-cconfig_file = ( '%s/conf/config.ini' %(basedir)
+cconfig_file = ( '%s/conf/config.ini' %(basedir))
 cconfig = ConfigParser.ConfigParser()
 cconfig.readfp(open(cconfig_file))
-
 image = cconfig.get('baseimage','ami')
-
-"""
-Name of key set via awsconsole or other tools
-"""
-aws_keypair = 'puppetkey'
-
-
-ccluster = config.get('cluster','env')
+aws_keypair = cconfig.get('cluster', 'puppetkey')
+ccluster = cconfig.get('cluster','env')
+bizunit = config.get('master-conf','unit')
+env = config.get('master-conf','env')
+domain = bizunit + env
 
 import emu
 from emu import conn
-
 
 def controller():
     global VERBOSE
@@ -99,10 +93,11 @@ if thishost in hostname:
 secgroup = options.secgroup
 instance_size = cluster_config.get( secgroup, 'inst_size' )
 
-zone = ec2_region_data.lnfoRegion(secgroup)
+#zone = ec2_region_data.lnfoRegion(secgroup)
 
 try:
-    reservation = conn.run_instances(image, min_count=1, max_count=1, instance_type=instance_size, key_name=aws_keypair, security_groups=[secgroup], placement=zone)
+    reservation = conn.run_instances(image, min_count=1, max_count=1, instance_type=instance_size, key_name=aws_keypair, security_groups=[secgroup])
+    #reservation = conn.run_instances(image, min_count=1, max_count=1, instance_type=instance_size, key_name=aws_keypair, security_groups=[secgroup], placement=zone)
 except:
     print "unknown error aborting!"
     sys.exit(2)
@@ -125,10 +120,14 @@ if os.path.isfile(dns_lock):
 if not os.path.exists(dns_lock):
     open(dns_lock, 'w').close()
 
+from dns import EC2_Dns
+from emu import EC2_info
+
 dns = EC2_Dns()
+ec2_info = EC2_info()
 
 try:
-    ipaddr = str(emu.get_instip_by_id(my_inst))
+    ipaddr = str(ec2_info.get_instip_by_id(my_inst))
     dns.write_ptr_record(ipaddr, hostname, domain )
 except Exception, err:
     print err
@@ -153,6 +152,10 @@ print "sleeping to allow host to come up"
 time.sleep(65)
 
 fqdn = ("%s.%s.internal" %(hostname, domain))
+print fqdn
+
+# disabled for now will test later
+sys.exit(0)
 
 subprocess.call(['/usr/bin/sudo', '/usr/sbin/puppetca', '--clean', fqdn],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 subprocess.call(['/usr/bin/sudo','/scripts/sysconfig.py', '-H', fqdn],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
