@@ -39,7 +39,8 @@ sys.path.append(mdir)
 cluster_file = '/etc/cluster.ini'
 cluster_config = ConfigParser.ConfigParser()
 cluster_config.readfp(open(cluster_file))
-cconfig_file = ( '%s/conf/config.ini' %(basedir))
+#cconfig_file = ( '%s/conf/config.ini' %(basedir))
+cconfig_file = ( '/etc/config.ini' %(basedir))
 cconfig = ConfigParser.ConfigParser()
 cconfig.readfp(open(cconfig_file))
 image = cconfig.get('baseimage','ami')
@@ -138,13 +139,17 @@ except Exception, err:
     print err
 
 try:
-    dns.write_a_record(ipaddr, hostname)
+    dns.write_a_record(ipaddr, hostname, domain)
 except Exception, err:
     print err
 
-
 try:
     dns.clean_files()
+except Exception, err:
+    print err
+
+try:
+    dns.restart_named()
 except Exception, err:
     print err
 

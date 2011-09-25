@@ -28,3 +28,9 @@ Installation Instructions
 
 
 
+
+install httpd ( for yum repo)
+mkdir -p /usr/local/repo/centos/5/extras/{i386,noarch,x86_64}
+mkdir -p /usr/local/repo/centos/5/extras/i686 
+
+cd $repo dir && .. && createrepo .

@@ -16,3 +16,5 @@ $TTL    86400
 
 ; append here
 
+212		IN	PTR	aws1prdweb2.burrutiaprd.internal.
+

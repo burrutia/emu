@@ -35,8 +35,6 @@ basedir = config.get('master-conf','basedir')
 class EC2_Dns(object):
     def __init__(self):
         self.object = object
-        #bind_conf = '/etc/named.conf'
-        #self.bind_conf = bind_conf
 
     def backup_zone(self, object):
         """ 
@@ -79,14 +77,13 @@ class EC2_Dns(object):
         named_conf_tpl = ('%s/scripts/dns/workspace/named.conf' %(basedir))
         forward_zone = ('/var/named/zones/master/%s.internal.zone.db' %(domain))
         forward_zone_tpl = ('%s/scripts/dns/workspace/%s.internal.zone.db' %(basedir, domain))
-        copy(forward_zone, forward_zone_tpl)
-        self.named_conf_tpl = named_conf_tpl
         self.bind_conf = bind_conf
         self.named_conf_tpl = named_conf_tpl
         self.forward_zone = forward_zone
         self.forward_zone_tpl = forward_zone_tpl
         self.fzf = forward_zone
         self.fzn = forward_zone_tpl
+        copy(self.forward_zone, self.forward_zone_tpl)
 
     def clean_zone(self, zone_file, zone_file_new, domain, thostname):
         self.prepare_conf( domain )
@@ -144,6 +141,9 @@ class EC2_Dns(object):
     def clean_files(self):
         subprocess.Popen( "%s/shell/clean_named.sh" %(basedir), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
 
+    def restart_named(self):
+        subprocess.Popen( "/etc/init.d/named restart", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+
     def set_fserialdate(self ):
         fileHandle = open ( self.template_out, "r" )
         regex = re.compile(r'\d{10}')
@@ -181,15 +181,15 @@ class EC2_Dns(object):
         copy(self.template_out, '/var/named/zones/master/')
 
 
-    def write_a_record(self, ipaddr, thostname ):
-        copy(self.forward_zone, self.forward_zone_tpl)
+    def write_a_record(self, ipaddr, thostname, domain ):
+        self.clean_zone(self.forward_zone, self.forward_zone_tpl, domain, thostname )
         fileHandle = open ( self.forward_zone_tpl, 'a')
         print "opening %s" %(self.forward_zone_tpl)
         print "%s\t\tIN\tA\t%s\n" %(thostname,ipaddr)
         fileHandle.write ( '%s\t\tIN\tA\t%s\n' %(thostname,ipaddr))
         fileHandle.close()
         target_zone = ("/var/named/zones/master/%s" %(self.zone_name))
-        copy(self.forward_zone_tpl,self.forward_zone)
+        copy(self.forward_zone_tpl, self.forward_zone)
 
     def sync_named(self):
         subprocess.call(['/usr/bin/sudo','/scripts/sync_named.sh'],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
