@@ -18,7 +18,8 @@
 # SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
 # WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-import commands
+#import commands
+import subprocess
 import os, sys, re, string
 import optparse
 
@@ -33,7 +34,7 @@ def controller():
 
     options, arguments = p.parse_args()
     if options.fqdn_host:
-        print "--------"
+        fqdn_host = options.fqdn_host
     else:
         p.print_help()
 
@@ -43,26 +44,19 @@ def main():
 if __name__ == '__main__':
     main()
 
-fqdn_host = options.fqdn_host
 
 h = re.compile("\.").split(fqdn_host)
 hostname =h[0]
 domainname =  ("%s.%s" %(h[1], h[2]))
-print "Hostname is %s" %(hostname)
-print "Domainname is %s" %(domainname)
-print "Setting domainname"
-set_domain = commands.getoutput("/usr/bin/ssh %s %s.%s '/usr/bin/sudo  /bin/domainname %s;exit'" %( dsa_key, hostname, domainname, domainname ))
-set_hostname = commands.getoutput("/usr/bin/ssh %s  %s.%s '/usr/bin/sudo  /bin/hostname %s;exit'" %( dsa_key, hostname, domainname, hostname ))
-clear_oldcert = commands.getoutput("/usr/bin/ssh %s %s.%s '/usr/bin/sudo find /var/lib/puppet -name *.pem -exec rm -f '{}' +'")
-restart_syslog = commands.getoutput("/usr/bin/ssh %s %s.%s '/usr/bin/sudo /etc/init.d/*syslog* restart'" %( dsa_key, hostname, domainname ))
-start_puppet = commands.getoutput("/usr/bin/ssh %s %s.%s '/usr/bin/sudo /etc/init.d/puppet restart'" %( dsa_key, hostname, domainname ))
 
-try:
-    print set_domain
-    print set_hostname
-    print clear_oldcert
-    print restart_syslog
-    print restart_syslog
-    print start_puppet
-except ValueError:
-    print "oops error can't change hostname domainame check tty setting on sudoers"
+sd = ("/usr/bin/ssh %s %s.%s '/usr/bin/sudo /bin/domainname %s;exit'" %( dsa_key, hostname, domainname, domainname ))
+sh = ("/usr/bin/ssh %s %s.%s '/usr/bin/sudo /bin/hostname %s;exit'" %( dsa_key, hostname, domainname, hostname ))
+cc = ("/usr/bin/ssh %s %s.%s '/usr/bin/sudo find /var/lib/puppet -name *.pem -exec rm -f '{}' +'")
+rs = ("/usr/bin/ssh %s %s.%s '/usr/bin/sudo /etc/init.d/*syslog* restart'" %( dsa_key, hostname, domainname ))
+rp = ("/usr/bin/ssh %s %s.%s '/usr/bin/sudo /etc/init.d/puppet restart'" %( dsa_key, hostname, domainname ))
+
+subprocess.Popen( sd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+subprocess.Popen( sh, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+subprocess.Popen( cc, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+subprocess.Popen( rs, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+subprocess.Popen( rp, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]

@@ -30,7 +30,7 @@ def controller():
 
     options, arguments = p.parse_args()
     if options.hostname:
-         print "Hostname is %s" %(options.hostname)
+         hostname = options.hostname
     else:
         p.print_help()
 
@@ -40,7 +40,6 @@ def main():
 if __name__ == '__main__':
     main()
 
-hostname = options.hostname
 
 dsa_key_arg = "'ssh -i /root/.ssh/id_dsa -oPermitLocalCommand=yes'"
 

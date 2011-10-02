@@ -186,5 +186,7 @@ while (count < 10):
 
 getoutput("/usr/bin/sudo /usr/sbin/puppetca --sign %s" %(fqdn))
 
-#subprocess.call(['/home/control/scripts/bin/make_ini.py', '-H', hostname],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+ini_cmd = ("%s/scripts/bin/make_ini.py -H %s" %( basedir, hostname ))
+subprocess.Popen( ini_cmd , shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+
 os.remove(dns_lock)

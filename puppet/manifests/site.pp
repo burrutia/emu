@@ -1,5 +1,6 @@
 # site.pp
 
+import "files"
 import "accounts"
 import "nodes"
 import "apps"
