@@ -35,7 +35,9 @@ basedir = config.get('master-conf','basedir')
 mdir = ('%s/modules' %(basedir))
 sys.path.append(mdir)
 
-
+# change to be an ini var later
+dsa_key = '/root/.ssh/id_dsa'
+#
 cluster_file = '/etc/cluster.ini'
 cluster_config = ConfigParser.ConfigParser()
 cluster_config.readfp(open(cluster_file))
@@ -155,7 +157,7 @@ except Exception, err:
 print "sleeping to allow host to come up"
 time.sleep(65)
 
-fqdn = ("%s.%s.internal" %(hostname, domain))
+fqdn = ("%s.%s.internal" %( hostname, domain ))
 print fqdn
 
 subprocess.call(['/usr/bin/sudo', '/usr/sbin/puppetca', '--clean', fqdn],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -180,10 +182,9 @@ while (count < 10):
         break
     if not hostname in chk_puppet_req:
         print "Host not found attempting to fix"
-        root_pemkey = '/home/control/ec2/keys/id_puppetkey'
         fqdn = ("%s.%s.internal" %( hostname, domain ))
-        subprocess.Popen(['/usr/bin/ssh', '-i', root_pemkey, '-l', 'root', fqdn, '/etc/init.d/syslog', 'restart' ],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        getoutput("/usr/bin/python %s/scripts/agent/agent_fixup.py -H %s.%s.internal" %( basedir, hostname, domain))
+        subprocess.Popen(['/usr/bin/ssh', '-i', dsa_key, '-l', 'root', fqdn, '/etc/init.d/syslog', 'restart' ],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.Popen( agent_cmd , shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
         time.sleep(10)
 
 getoutput("/usr/bin/sudo /usr/sbin/puppetca --sign %s" %(fqdn))

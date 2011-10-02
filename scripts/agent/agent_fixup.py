@@ -22,6 +22,8 @@ import commands
 import os, sys, re, string
 import optparse
 
+dsa_key = "-i /root/.ssh/id_dsa"
+
 def controller():
     global VERBOSE
     p = optparse.OptionParser()
@@ -49,21 +51,18 @@ domainname =  ("%s.%s" %(h[1], h[2]))
 print "Hostname is %s" %(hostname)
 print "Domainname is %s" %(domainname)
 print "Setting domainname"
-key_arg = "-i /root/.ssh/id_dsa.pub"
-set_domain = commands.getoutput("/usr/bin/ssh %s %s.%s '/usr/bin/sudo  /bin/domainname %s;exit'" %( key_arg, hostname, domainname, domainname ))
-print "Setting hostname"
-set_hostname = commands.getoutput("/usr/bin/ssh %s  %s.%s '/usr/bin/sudo  /bin/hostname %s;exit'" %( key_arg, hostname, domainname, hostname ))
+set_domain = commands.getoutput("/usr/bin/ssh %s %s.%s '/usr/bin/sudo  /bin/domainname %s;exit'" %( dsa_key, hostname, domainname, domainname ))
+set_hostname = commands.getoutput("/usr/bin/ssh %s  %s.%s '/usr/bin/sudo  /bin/hostname %s;exit'" %( dsa_key, hostname, domainname, hostname ))
 clear_oldcert = commands.getoutput("/usr/bin/ssh %s %s.%s '/usr/bin/sudo find /var/lib/puppet -name *.pem -exec rm -f '{}' +'")
-restart_syslog = commands.getoutput("/usr/bin/ssh %s %s.%s '/usr/bin/sudo /etc/init.d/syslog restart'" %( key_arg, hostname, domainname ))
-start_puppet = commands.getoutput("/usr/bin/ssh %s %s.%s '/usr/bin/sudo /etc/init.d/puppet restart'" %( key_arg, hostname, domainname ))
+restart_syslog = commands.getoutput("/usr/bin/ssh %s %s.%s '/usr/bin/sudo /etc/init.d/*syslog* restart'" %( dsa_key, hostname, domainname ))
+start_puppet = commands.getoutput("/usr/bin/ssh %s %s.%s '/usr/bin/sudo /etc/init.d/puppet restart'" %( dsa_key, hostname, domainname ))
 
 try:
-    set_domain
-    set_hostname
-    clear_oldcert
-    restart_syslog
-    restart_syslog
-    start_puppet
-    # puppet ca now
+    print set_domain
+    print set_hostname
+    print clear_oldcert
+    print restart_syslog
+    print restart_syslog
+    print start_puppet
 except ValueError:
     print "oops error can't change hostname domainame check tty setting on sudoers"
