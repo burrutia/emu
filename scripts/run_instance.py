@@ -176,19 +176,15 @@ while (count < 10):
     time.sleep(5)
     print chk_puppet_req
     if hostname in chk_puppet_req:
-        fqdn = ("%s.%s.internal" %( hostname, domain ))
         print "found %s signing cert" %( fqdn )
         time.sleep(5)
         break
     if not hostname in chk_puppet_req:
         print "Host not found attempting to fix"
-        fqdn = ("%s.%s.internal" %( hostname, domain ))
-        subprocess.Popen(['/usr/bin/ssh', '-i', dsa_key, '-l', 'root', fqdn, '/etc/init.d/syslog', 'restart' ],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         subprocess.Popen( agent_cmd , shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
         time.sleep(10)
 
 getoutput("/usr/bin/sudo /usr/sbin/puppetca --sign %s" %(fqdn))
 
-#subprocess.call(['/usr/bin/sudo', '/scripts/clean_named.sh'],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 #subprocess.call(['/home/control/scripts/bin/make_ini.py', '-H', hostname],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 os.remove(dns_lock)
