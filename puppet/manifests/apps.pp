@@ -1,1 +1,1 @@
-include "packages/*.pp"
+import "packages/*.pp"

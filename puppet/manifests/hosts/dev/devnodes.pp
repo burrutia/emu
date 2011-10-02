@@ -1,0 +1,2 @@
+node dev_base {
+}

@@ -1,0 +1,2 @@
+node qa_base {
+}

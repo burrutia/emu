@@ -1,3 +1,3 @@
-include "hosts/dev/*.pp"
-include "hosts/prod/*.pp"
-include "hosts/test/*.pp"
+import "hosts/dev/*.pp"
+import "hosts/prod/*.pp"
+import "hosts/test/*.pp"
