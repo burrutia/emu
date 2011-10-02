@@ -1,0 +1,12 @@
+# .bashrc
+# file managed by puppet
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+        . /etc/bashrc
+fi
+
+# User specific aliases and functions
+#source  /etc/bash_completion.d/git
+#export PS1='[\u@\h \W$(__git_ps1 " (%s)")]\$ '
+export PS1='[\u@\h \W$(/bin/bash -c "source /etc/bash_completion.d/git &&  __git_ps1")]\$ '
