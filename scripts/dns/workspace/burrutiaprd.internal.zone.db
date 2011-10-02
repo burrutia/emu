@@ -24,4 +24,4 @@ ns1		IN	A	10.170.131.181
 
 aws1prdns1		IN	A	10.170.131.181
 
-aws1prdweb1		IN	A	10.172.82.246
+aws1prdweb1		IN	A	10.160.225.221

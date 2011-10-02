@@ -26,8 +26,8 @@ config_file ='/etc/datacenter.ini'
 config = ConfigParser.ConfigParser()
 config.readfp(open(config_file))
 basedir = config.get('master-conf','basedir')
-
-cconfig_file = ('%s/conf/config.ini' %(basedir))
+#cconfig_file = ('%s/conf/config.ini' %(basedir))
+cconfig_file = ('/etc/config.ini')
 cconfig = ConfigParser.ConfigParser()
 cconfig.readfp(open(cconfig_file))
 

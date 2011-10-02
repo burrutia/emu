@@ -142,7 +142,8 @@ class EC2_Dns(object):
         subprocess.Popen( "%s/shell/clean_named.sh" %(basedir), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
 
     def restart_named(self):
-        subprocess.Popen( "/etc/init.d/named restart", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+        named_restart = subprocess.Popen( "/etc/init.d/named restart", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+        print named_restart
 
     def set_fserialdate(self ):
         fileHandle = open ( self.template_out, "r" )

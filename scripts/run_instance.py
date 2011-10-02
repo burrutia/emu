@@ -39,8 +39,7 @@ sys.path.append(mdir)
 cluster_file = '/etc/cluster.ini'
 cluster_config = ConfigParser.ConfigParser()
 cluster_config.readfp(open(cluster_file))
-#cconfig_file = ( '%s/conf/config.ini' %(basedir))
-cconfig_file = ( '/etc/config.ini' %(basedir))
+cconfig_file = ( '/etc/config.ini' )
 cconfig = ConfigParser.ConfigParser()
 cconfig.readfp(open(cconfig_file))
 image = cconfig.get('baseimage','ami')
@@ -159,11 +158,9 @@ time.sleep(65)
 fqdn = ("%s.%s.internal" %(hostname, domain))
 print fqdn
 
-# disabled for now will test later
-sys.exit(0)
-
 subprocess.call(['/usr/bin/sudo', '/usr/sbin/puppetca', '--clean', fqdn],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-subprocess.call(['/usr/bin/sudo','/scripts/sysconfig.py', '-H', fqdn],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+subprocess.call(['/usr/bin/sudo','/home/emu/scripts/fixup/sysconfig.py', '-H', fqdn],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
 agent_cmd = ("/usr/bin/python %s/scripts/agent/agent_fixup.py -H %s.%s.internal" % ( basedir, hostname, domain ))
 subprocess.Popen( agent_cmd , shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
 
@@ -186,11 +183,11 @@ while (count < 10):
         root_pemkey = '/home/control/ec2/keys/id_puppetkey'
         fqdn = ("%s.%s.internal" %( hostname, domain ))
         subprocess.Popen(['/usr/bin/ssh', '-i', root_pemkey, '-l', 'root', fqdn, '/etc/init.d/syslog', 'restart' ],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        getoutput("/usr/bin/python /home/control/scripts/agent/agent_fixup.py -H %s.%s.internal" %(hostname, domain))
+        getoutput("/usr/bin/python %s/scripts/agent/agent_fixup.py -H %s.%s.internal" %( basedir, hostname, domain))
         time.sleep(10)
 
 getoutput("/usr/bin/sudo /usr/sbin/puppetca --sign %s" %(fqdn))
 
-subprocess.call(['/usr/bin/sudo', '/scripts/clean_named.sh'],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-subprocess.call(['/home/control/scripts/bin/make_ini.py', '-H', hostname],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#subprocess.call(['/usr/bin/sudo', '/scripts/clean_named.sh'],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#subprocess.call(['/home/control/scripts/bin/make_ini.py', '-H', hostname],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 os.remove(dns_lock)
