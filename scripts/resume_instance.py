@@ -122,6 +122,3 @@ except Exception, err:
 fqdn = ("%s.%s.internal" %( hostname, domain ))
 subprocess.call(['/usr/bin/sudo', '/home/emu/scripts/tpl/sysconfig.py', '-H', fqdn],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 getoutput("/usr/bin/python %s/scripts/agent/agent_resume.py -H %s.%s.internal" %( basedir, hostname, domain ))
-
-#run_agent = getoutput("/usr/bin/python /home/control/scripts/agent/agent_resume.py -H %s.oakley%s.internal" %(hostname,cluster))
-#print run_agent
