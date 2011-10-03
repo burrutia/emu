@@ -21,9 +21,14 @@
 #import commands
 import subprocess
 import os, sys, re, string
+import ConfigParser
 import optparse
 
-dsa_key = "-i /root/.ssh/id_dsa"
+config_file ='/etc/datacenter.ini'
+
+config = ConfigParser.ConfigParser()
+config.readfp(open(config_file))
+dsa_key =  config.get('master-conf','dsa_key')
 
 def controller():
     global VERBOSE
