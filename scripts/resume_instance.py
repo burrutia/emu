@@ -22,6 +22,7 @@ from  commands import getoutput
 import os, re, string, ConfigParser
 import optparse, sys
 import subprocess
+import time
 
 config_file ='/etc/datacenter.ini'
 
@@ -65,12 +66,14 @@ def main():
 if __name__ == '__main__':
     main()
 
+
+hostname_ini_dir = ('%s/host_ini' %(basedir))
+hostname_ini = ("%s/%s.ini" %( hostname_ini_dir, hostname ))
+
 inst = ConfigParser.ConfigParser()
 inst.readfp(open(hostname_ini))
 my_inst  = inst.get(hostname,'instance_id')
 
-hostname_ini_dir = ('%s/host_ini' %(basedir))
-hostname_ini = ("%s/%s.ini" %( hostname_ini_dir, hostname ))
 print "Starting instance %s" %(my_inst)
 
 try:
@@ -90,11 +93,16 @@ if not os.path.exists(dns_lock):
 from dns import EC2_Dns
 from emu import EC2_info
 
+# change later in func 
+# to iterate and wait for ip to come up
+time.sleep(40)
+
 dns = EC2_Dns()
 ec2_info = EC2_info()
 
 try:
     ipaddr = str(ec2_info.get_instip_by_id(my_inst))
+    print ipaddr
     dns.write_ptr_record(ipaddr, hostname, domain )
 except Exception, err:
     print err
@@ -120,5 +128,7 @@ except Exception, err:
     print err
 
 fqdn = ("%s.%s.internal" %( hostname, domain ))
-subprocess.call(['/usr/bin/sudo', '/home/emu/scripts/tpl/sysconfig.py', '-H', fqdn],shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-getoutput("/usr/bin/python %s/scripts/agent/agent_resume.py -H %s.%s.internal" %( basedir, hostname, domain ))
+sconfreset = ( "/usr/bin/sudo %s/scripts/tpl/sysconfig.py -H %s" %( basedir, fqdn ))
+agent_cmd = ("/usr/bin/python %s/scripts/agent/agent_resume.py -H %s.%s.internal" %( basedir, hostname, domain ) )
+subprocess.Popen( sconfreset, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+subprocess.Popen( agent_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
